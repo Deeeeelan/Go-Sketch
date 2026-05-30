@@ -59,10 +59,21 @@ func (m model) View() tea.View {
 
 func main() {
 	cmd := &cli.Command{
-		Name:  "go-sketch",
-		Usage: "Create a sketch board",
-		Action: func(context.Context, *cli.Command) error {
-			fmt.Println("It works!")
+		Name:      "go-sketch",
+		Usage:     "Create a sketch board",
+		Suggest:   true,
+		ArgsUsage: "width height",
+		Arguments: []cli.Argument{
+			&cli.IntArg{ // TODO: Add error for missing args
+				Name: "width",
+			},
+			&cli.IntArg{
+				Name: "height",
+			},
+		},
+
+		Action: func(ctx context.Context, cmd *cli.Command) error {
+			fmt.Printf("Dims:  %d %d\n", cmd.IntArg("width"), cmd.IntArg("height"))
 			p := tea.NewProgram(initialModel())
 			if _, err := p.Run(); err != nil {
 				fmt.Printf("Alas, there's been an error: %v", err)
