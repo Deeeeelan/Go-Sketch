@@ -5,14 +5,27 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/urfave/cli/v3"
 )
 
-const BOARD = `╭─╮
-│%│
-╰─╯`
+var BOARD_BORDERS = [3][3]string{
+	{"╭", "─", "╮"},
+	{"│", "%", "│"},
+	{"╰", "─", "╯"}}
+
+func makeBoard(inner_width int, inner_height int) string { // TODO: Add outer border
+	board := BOARD_BORDERS[0][0]
+	board += strings.Repeat(BOARD_BORDERS[0][1], inner_width)
+	board += BOARD_BORDERS[0][2] + "\n"
+	board += strings.Repeat(BOARD_BORDERS[1][0]+strings.Repeat(BOARD_BORDERS[1][1], inner_width)+BOARD_BORDERS[1][2]+"\n", inner_height)
+	board += BOARD_BORDERS[2][0]
+	board += strings.Repeat(BOARD_BORDERS[2][1], inner_width)
+	board += BOARD_BORDERS[2][2] + "\n"
+	return board
+}
 
 type model struct {
 	cursor [2]int
@@ -74,6 +87,7 @@ func main() {
 
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			fmt.Printf("Dims:  %d %d\n", cmd.IntArg("width"), cmd.IntArg("height"))
+			fmt.Print(makeBoard(cmd.IntArg("width"), cmd.IntArg("height")))
 			p := tea.NewProgram(initialModel())
 			if _, err := p.Run(); err != nil {
 				fmt.Printf("Alas, there's been an error: %v", err)
