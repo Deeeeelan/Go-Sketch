@@ -16,7 +16,7 @@ var BOARD_BORDERS = [3][3]string{
 	{"│", " ", "│"},
 	{"╰", "─", "╯"}}
 
-func makeBoard(inner_width int, inner_height int) string { // TODO: Add outer border
+func makeBoard(m model, inner_width int, inner_height int, char_pos [2]int) string { // TODO: Add outer border
 	board := BOARD_BORDERS[0][0]
 	board += strings.Repeat(BOARD_BORDERS[0][1], inner_width)
 	board += BOARD_BORDERS[0][2] + "\n"
@@ -28,9 +28,11 @@ func makeBoard(inner_width int, inner_height int) string { // TODO: Add outer bo
 }
 
 type model struct {
-	cursor        [2]int
-	canvas_width  int
-	canvas_height int
+	char_pos       [2]int
+	subchar_pos    [2]int // braille character dot
+	canvas_width   int
+	canvas_height  int
+	canvas_content string
 }
 
 func initialModel() model {
@@ -52,10 +54,21 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 
 		case "up", "k":
-			if m.cursor[1] > 0 {
-				m.cursor[1]++
+			if m.char_pos[1] > 0 {
+				m.char_pos[1]--
 			}
-
+		case "down", "j":
+			if m.char_pos[1] < m.canvas_height {
+				m.char_pos[1]++
+			}
+		case "left", "h":
+			if m.char_pos[0] > 0 {
+				m.char_pos[0]--
+			}
+		case "right", "l":
+			if m.char_pos[0] < m.canvas_width {
+				m.char_pos[0]++
+			}
 		}
 	}
 
@@ -65,8 +78,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m model) View() tea.View {
 	s := "Sketch\n\n"
 
-	s += makeBoard(m.canvas_width, m.canvas_height)
+	current_board := makeBoard(m, m.canvas_width, m.canvas_height)
+	s += current_board
 
+	s += fmt.Sprintf("cords: (%d, %d), [%d, %d]", m.char_pos[0], m.char_pos[1], m.subchar_pos[0], m.subchar_pos[1])
 	s += "\nPress q to quit.\n"
 
 	return tea.NewView(s)
