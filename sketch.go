@@ -13,7 +13,7 @@ import (
 
 var BOARD_BORDERS = [3][3]string{
 	{"╭", "─", "╮"},
-	{"│", "%", "│"},
+	{"│", " ", "│"},
 	{"╰", "─", "╯"}}
 
 func makeBoard(inner_width int, inner_height int) string { // TODO: Add outer border
@@ -28,7 +28,9 @@ func makeBoard(inner_width int, inner_height int) string { // TODO: Add outer bo
 }
 
 type model struct {
-	cursor [2]int
+	cursor        [2]int
+	canvas_width  int
+	canvas_height int
 }
 
 func initialModel() model {
@@ -63,7 +65,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m model) View() tea.View {
 	s := "Sketch\n\n"
 
-	s += "---\nBoard\n---\n"
+	s += makeBoard(m.canvas_width, m.canvas_height)
 
 	s += "\nPress q to quit.\n"
 
@@ -86,9 +88,11 @@ func main() {
 		},
 
 		Action: func(ctx context.Context, cmd *cli.Command) error {
-			fmt.Printf("Dims:  %d %d\n", cmd.IntArg("width"), cmd.IntArg("height"))
-			fmt.Print(makeBoard(cmd.IntArg("width"), cmd.IntArg("height")))
-			p := tea.NewProgram(initialModel())
+			new_model := initialModel()
+			new_model.canvas_width = cmd.IntArg("width")
+			new_model.canvas_height = cmd.IntArg("height")
+			p := tea.NewProgram(new_model)
+
 			if _, err := p.Run(); err != nil {
 				fmt.Printf("Alas, there's been an error: %v", err)
 				os.Exit(1)
