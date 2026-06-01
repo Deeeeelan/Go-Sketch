@@ -72,19 +72,33 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 
 		case "up", "k":
-			if m.char_pos[1] > 0 {
+			if m.subchar_pos[1] > 0 {
+				m.subchar_pos[1]--
+			} else if m.char_pos[1] > 0 {
+				m.subchar_pos[1] = 2
 				m.char_pos[1]--
 			}
+
 		case "down", "j":
-			if m.char_pos[1] < m.canvas_height-1 {
+			if m.subchar_pos[1] < 2 {
+				m.subchar_pos[1]++
+			} else if m.char_pos[1] < m.canvas_height-1 {
+				m.subchar_pos[1] = 0
 				m.char_pos[1]++
 			}
+
 		case "left", "h":
-			if m.char_pos[0] > 0 {
+			if m.subchar_pos[0] > 0 {
+				m.subchar_pos[0]--
+			} else if m.char_pos[0] > 0 {
+				m.subchar_pos[0] = 1
 				m.char_pos[0]--
 			}
 		case "right", "l":
-			if m.char_pos[0] < m.canvas_width-1 {
+			if m.subchar_pos[0] < 1 {
+				m.subchar_pos[0]++
+			} else if m.char_pos[0] < m.canvas_width-1 {
+				m.subchar_pos[0] = 0
 				m.char_pos[0]++
 			}
 		}
