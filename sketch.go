@@ -25,8 +25,11 @@ func makeBoard(m model, inner_width int, inner_height int) string { // TODO: Add
 		board += BOARD_BORDERS[1][0]
 		for j := 0; j < inner_width; j++ {
 			if m.char_pos[0] == j && m.char_pos[1] == i {
-				braille_cursor := 0x2800
-				braille_cursor += int(math.Pow(2, float64(m.subchar_pos[1]))) << (3 * m.subchar_pos[0])
+				curr_rune := int(m.canvas_content[i][j])
+				if curr_rune == ' ' {
+					curr_rune = 0x2800
+				}
+				braille_cursor := curr_rune | int(math.Pow(2, float64(m.subchar_pos[1])))<<(3*m.subchar_pos[0])
 
 				board += string(rune(braille_cursor))
 			} else {
@@ -42,6 +45,21 @@ func makeBoard(m model, inner_width int, inner_height int) string { // TODO: Add
 	return board
 }
 
+func clearCanvasContent(m *model) {
+	for i := 0; i < m.canvas_height; i++ {
+		m.canvas_content = append(m.canvas_content, []rune(strings.Repeat(" ", m.canvas_width)))
+	}
+}
+
+func updateCanvas(m *model) {
+	curr_rune := m.canvas_content[m.char_pos[1]][m.char_pos[0]]
+	if curr_rune == ' ' {
+		curr_rune = 0x2800
+	}
+	new_rune := curr_rune | rune(int(math.Pow(2, float64(m.subchar_pos[1])))<<(3*m.subchar_pos[0]))
+	m.canvas_content[m.char_pos[1]][m.char_pos[0]] = new_rune
+}
+
 type model struct {
 	char_pos       [2]int // (x, y)
 	subchar_pos    [2]int // braille character dot
@@ -55,9 +73,7 @@ func initialModel(cw int, ch int) model {
 	m.canvas_width = cw
 	m.canvas_height = ch
 
-	for i := 0; i < m.canvas_height; i++ {
-		m.canvas_content = append(m.canvas_content, []rune(strings.Repeat(" ", m.canvas_width)))
-	}
+	clearCanvasContent(&m)
 	return m
 }
 
@@ -74,6 +90,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "ctrl+c", "q":
 			return m, tea.Quit
+		case "esc":
+			clearCanvasContent(&m)
 
 		case "up", "k":
 			if m.subchar_pos[1] > 0 {
@@ -106,6 +124,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.char_pos[0]++
 			}
 		}
+		updateCanvas(&m)
 	}
 
 	return m, nil
