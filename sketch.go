@@ -16,11 +16,22 @@ var BOARD_BORDERS = [3][3]string{
 	{"│", " ", "│"},
 	{"╰", "─", "╯"}}
 
-func makeBoard(m model, inner_width int, inner_height int, char_pos [2]int) string { // TODO: Add outer border
+func makeBoard(m model, inner_width int, inner_height int) string { // TODO: Add outer border
 	board := BOARD_BORDERS[0][0]
 	board += strings.Repeat(BOARD_BORDERS[0][1], inner_width)
 	board += BOARD_BORDERS[0][2] + "\n"
-	board += strings.Repeat(BOARD_BORDERS[1][0]+strings.Repeat(BOARD_BORDERS[1][1], inner_width)+BOARD_BORDERS[1][2]+"\n", inner_height)
+	for i := 0; i < inner_height; i++ {
+		board += BOARD_BORDERS[1][0]
+		for j := 0; j < inner_width; j++ {
+			if m.char_pos[0] == j && m.char_pos[1] == i {
+				board += "▒"
+			} else {
+				board += string(m.canvas_content[i][j])
+			}
+
+		}
+		board += BOARD_BORDERS[1][2] + "\n"
+	}
 	board += BOARD_BORDERS[2][0]
 	board += strings.Repeat(BOARD_BORDERS[2][1], inner_width)
 	board += BOARD_BORDERS[2][2] + "\n"
@@ -28,15 +39,22 @@ func makeBoard(m model, inner_width int, inner_height int, char_pos [2]int) stri
 }
 
 type model struct {
-	char_pos       [2]int
+	char_pos       [2]int // (x, y)
 	subchar_pos    [2]int // braille character dot
 	canvas_width   int
 	canvas_height  int
-	canvas_content string
+	canvas_content [][]rune
 }
 
-func initialModel() model {
-	return model{}
+func initialModel(cw int, ch int) model {
+	m := model{}
+	m.canvas_width = cw
+	m.canvas_height = ch
+
+	for i := 0; i < m.canvas_height; i++ {
+		m.canvas_content = append(m.canvas_content, []rune(strings.Repeat(" ", m.canvas_width)))
+	}
+	return m
 }
 
 func (m model) Init() tea.Cmd {
@@ -58,7 +76,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.char_pos[1]--
 			}
 		case "down", "j":
-			if m.char_pos[1] < m.canvas_height {
+			if m.char_pos[1] < m.canvas_height-1 {
 				m.char_pos[1]++
 			}
 		case "left", "h":
@@ -66,7 +84,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.char_pos[0]--
 			}
 		case "right", "l":
-			if m.char_pos[0] < m.canvas_width {
+			if m.char_pos[0] < m.canvas_width-1 {
 				m.char_pos[0]++
 			}
 		}
@@ -103,9 +121,7 @@ func main() {
 		},
 
 		Action: func(ctx context.Context, cmd *cli.Command) error {
-			new_model := initialModel()
-			new_model.canvas_width = cmd.IntArg("width")
-			new_model.canvas_height = cmd.IntArg("height")
+			new_model := initialModel(cmd.IntArg("width"), cmd.IntArg("height"))
 			p := tea.NewProgram(new_model)
 
 			if _, err := p.Run(); err != nil {
