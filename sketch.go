@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"strings"
 
@@ -24,7 +25,10 @@ func makeBoard(m model, inner_width int, inner_height int) string { // TODO: Add
 		board += BOARD_BORDERS[1][0]
 		for j := 0; j < inner_width; j++ {
 			if m.char_pos[0] == j && m.char_pos[1] == i {
-				board += "▒"
+				braille_cursor := 0x2800
+				braille_cursor += int(math.Pow(2, float64(m.subchar_pos[1]))) << (3 * m.subchar_pos[0])
+
+				board += string(rune(braille_cursor))
 			} else {
 				board += string(m.canvas_content[i][j])
 			}
